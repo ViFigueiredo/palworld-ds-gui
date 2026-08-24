@@ -58,7 +58,8 @@ func ReadConfig() string {
 
 	configData, err := os.ReadFile(configPath)
 	if err != nil {
-		panic(err)
+		// Sem arquivo de config (e sem default) — retorna vazio em vez de derrubar o processo
+		return ""
 	}
 
 	configString := strings.TrimSpace(string(configData))
@@ -69,7 +70,7 @@ func ReadConfig() string {
 		configData, err := os.ReadFile(utils.Config.ServerDefaultConfigPath)
 
 		if err != nil {
-			panic(err)
+			return ""
 		}
 
 		return strings.TrimSpace(string(configData))

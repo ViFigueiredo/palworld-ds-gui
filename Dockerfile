@@ -29,4 +29,4 @@ COPY --from=web /src/app/frontend/dist /usr/local/share/palworld-ds-gui-web
 EXPOSE 21577
 # O binário roda a partir de /data para que logs/settings/steamcmd fiquem no volume persistente.
 # /data/server pré-existente evita que o GUI baixe o servidor dedicado (o jogo já roda em container no swarm).
-ENTRYPOINT ["/bin/sh", "-c", "mkdir -p /data/server && cp /usr/local/bin/palworld-ds-gui-server /data/palworld-ds-gui-server && exec /data/palworld-ds-gui-server"]
+ENTRYPOINT ["/bin/sh", "-c", "mkdir -p /data/server && ([ -f /data/server/DefaultPalWorldSettings.ini ] || touch /data/server/DefaultPalWorldSettings.ini) && cp /usr/local/bin/palworld-ds-gui-server /data/palworld-ds-gui-server && exec /data/palworld-ds-gui-server"]
