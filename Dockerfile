@@ -1,0 +1,19 @@
+# Build
+FROM golang:1.21-alpine AS builder
+WORKDIR /src
+
+COPY server/go.mod server/go.sum ./
+RUN go mod download
+
+COPY server/ ./
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/palworld-ds-gui-server .
+
+# Runtime
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates tzdata
+WORKDIR /data
+COPY --from=builder /out/palworld-ds-gui-server /usr/local/bin/palworld-ds-gui-server
+EXPOSE 21577
+# O binário roda a partir de /data para que logs/settings/steamcmd fiquem no volume persistente.
+# /data/server pré-existente evita que o GUI baixe o servidor dedicado (o jogo já roda em container no swarm).
+ENTRYPOINT ["/bin/sh", "-c", "mkdir -p /data/server && cp /usr/local/bin/palworld-ds-gui-server /data/palworld-ds-gui-server && exec /data/palworld-ds-gui-server"]

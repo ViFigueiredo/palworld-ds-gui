@@ -1,0 +1,24 @@
+services:
+  palworld-ds-gui:
+    # Imagem publicada no GHCR pelo workflow .github/workflows/docker-image.yaml
+    image: ghcr.io/vifigueiredo/palworld-ds-gui:latest
+    environment:
+      # REST API do servidor Palworld (ver API.md) — porta 8212 publicada no mesmo host
+      PALWORLD_API_URL: "http://194.34.232.101:8212/v1/api"
+      PALWORLD_API_USERNAME: "admin"
+      # Senha via variável do Portainer (repo é público — nunca commitar a senha)
+      PALWORLD_API_PASSWORD: "${PALWORLD_API_PASSWORD}"
+      TZ: "America/Sao_Paulo"
+    ports:
+      - "21577:21577/tcp"
+    volumes:
+      - /opt/palworld-ds-gui:/data
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M

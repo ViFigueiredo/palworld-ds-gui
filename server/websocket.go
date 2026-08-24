@@ -40,6 +40,19 @@ var (
 		getSteamAvatarEvent:         GetSteamAvatarHandler,
 		rconExecHandlerEvent:        RconExecHandlerHandler,
 		saveAdditionalSettingsEvent: SaveAdditionalSettingsHandler,
+		// REST API do Palworld (ver API.md)
+		palworldInfoEvent:     PalworldInfoHandler,
+		palworldPlayersEvent:  PalworldPlayersHandler,
+		palworldSettingsEvent: PalworldSettingsHandler,
+		palworldMetricsEvent:  PalworldMetricsHandler,
+		palworldGameDataEvent: PalworldGameDataHandler,
+		palworldSaveEvent:     PalworldSaveHandler,
+		palworldAnnounceEvent: PalworldAnnounceHandler,
+		palworldKickEvent:     PalworldKickHandler,
+		palworldBanEvent:      PalworldBanHandler,
+		palworldUnbanEvent:    PalworldUnbanHandler,
+		palworldShutdownEvent: PalworldShutdownHandler,
+		palworldStopEvent:     PalworldStopHandler,
 	}
 )
 
