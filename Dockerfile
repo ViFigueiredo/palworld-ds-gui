@@ -4,7 +4,7 @@ FROM node:20-alpine AS web
 RUN corepack enable && corepack prepare pnpm@8 --activate
 WORKDIR /src/app
 COPY app/wails.json app/wails.json
-COPY app/frontend/package.json app/frontend/pnpm-lock.yaml app/frontend/
+COPY app/frontend/package.json app/frontend/pnpm-lock.yaml frontend/
 WORKDIR /src/app/frontend
 RUN pnpm install --frozen-lockfile
 COPY app/frontend/ ./
