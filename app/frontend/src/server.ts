@@ -1,4 +1,11 @@
-import { SocketAction, TAdditionalSettings, TGenericObject } from './types';
+import {
+  SocketAction,
+  TAdditionalSettings,
+  TGenericObject,
+  TPalworldInfo,
+  TPalworldMetrics,
+  TPalworldPlayer
+} from './types';
 import { parseConfig, serializeConfig } from './helpers/config-parser';
 import { setConfig, setSaveName } from './actions/server';
 import { ConfigKey, TConfig } from './types/server-config';
@@ -295,6 +302,63 @@ export const ServerAPI = {
       const command = `${RconCommand.KICK} ${uid}`;
 
       await ServerAPI.rcon.execute(command);
+    }
+  },
+  // REST API do Palworld (ver API.md na raiz do repo) — o servidor do jogo roda no container do swarm
+  palworld: {
+    getInfo: async (): Promise<TPalworldInfo | undefined> => {
+      try {
+        const res = await ServerAPI.send(SocketAction.PALWORLD_INFO);
+        return res.data as TPalworldInfo;
+      } catch {
+        return undefined;
+      }
+    },
+    getMetrics: async (): Promise<TPalworldMetrics | undefined> => {
+      try {
+        const res = await ServerAPI.send(SocketAction.PALWORLD_METRICS);
+        return res.data as TPalworldMetrics;
+      } catch {
+        return undefined;
+      }
+    },
+    getPlayers: async (): Promise<TPalworldPlayer[]> => {
+      try {
+        const res = await ServerAPI.send(SocketAction.PALWORLD_PLAYERS);
+        return (res.data?.players ?? []) as TPalworldPlayer[];
+      } catch {
+        return [];
+      }
+    },
+    save: async () => {
+      await ServerAPI.send(SocketAction.PALWORLD_SAVE);
+    },
+    announce: async (message: string) => {
+      await ServerAPI.send(SocketAction.PALWORLD_ANNOUNCE, { message });
+    },
+    kick: async (userid: string, message?: string) => {
+      await ServerAPI.send(SocketAction.PALWORLD_KICK, {
+        userid,
+        message: message ?? ''
+      });
+    },
+    ban: async (userid: string, message?: string) => {
+      await ServerAPI.send(SocketAction.PALWORLD_BAN, {
+        userid,
+        message: message ?? ''
+      });
+    },
+    unban: async (userid: string) => {
+      await ServerAPI.send(SocketAction.PALWORLD_UNBAN, { userid });
+    },
+    shutdown: async (waittime: number, message?: string) => {
+      await ServerAPI.send(SocketAction.PALWORLD_SHUTDOWN, {
+        waittime,
+        message: message ?? ''
+      });
+    },
+    stop: async () => {
+      await ServerAPI.send(SocketAction.PALWORLD_STOP);
     }
   }
 };

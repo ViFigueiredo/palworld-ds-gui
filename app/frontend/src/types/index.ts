@@ -54,7 +54,20 @@ export enum SocketAction {
   SAVE_LAUNCH_PARAMS = 'SAVE_LAUNCH_PARAMS',
   GET_STEAM_AVATAR = 'GET_STEAM_AVATAR',
   RCON_EXECUTE = 'RCON_EXECUTE',
-  SAVE_ADDITIONAL_SETTINGS = 'SAVE_ADDITIONAL_SETTINGS'
+  SAVE_ADDITIONAL_SETTINGS = 'SAVE_ADDITIONAL_SETTINGS',
+  // REST API do Palworld (ver API.md na raiz do repo)
+  PALWORLD_INFO = 'PALWORLD_INFO',
+  PALWORLD_PLAYERS = 'PALWORLD_PLAYERS',
+  PALWORLD_SETTINGS = 'PALWORLD_SETTINGS',
+  PALWORLD_METRICS = 'PALWORLD_METRICS',
+  PALWORLD_GAMEDATA = 'PALWORLD_GAMEDATA',
+  PALWORLD_SAVE = 'PALWORLD_SAVE',
+  PALWORLD_ANNOUNCE = 'PALWORLD_ANNOUNCE',
+  PALWORLD_KICK = 'PALWORLD_KICK',
+  PALWORLD_BAN = 'PALWORLD_BAN',
+  PALWORLD_UNBAN = 'PALWORLD_UNBAN',
+  PALWORLD_SHUTDOWN = 'PALWORLD_SHUTDOWN',
+  PALWORLD_STOP = 'PALWORLD_STOP'
 }
 
 export enum SocketEvent {
@@ -67,6 +80,37 @@ export enum SocketEvent {
   LAUNCH_PARAMS_CHANGED = 'LAUNCH_PARAMS_CHANGED',
   CUSTOM_ERROR = 'CUSTOM_ERROR',
   ADD_CONSOLE_ENTRY = 'ADD_CONSOLE_ENTRY'
+}
+
+// ---------- Palworld REST API (ver API.md na raiz do repo) ----------
+
+export interface TPalworldInfo {
+  version: string;
+  servername: string;
+  description: string;
+  worldguid: string;
+}
+
+export interface TPalworldMetrics {
+  currentplayernum: number;
+  serverfps: number;
+  serverfpsaverage: number;
+  serverframetime: number;
+  days: number;
+  maxplayernum: number;
+  basecampnum: number;
+  uptime: number;
+}
+
+export interface TPalworldPlayer {
+  playerid: string;
+  steamid: string;
+  name: string;
+  level: number;
+  ping: number;
+  location_x: number;
+  location_y: number;
+  location_z: number;
 }
 
 export type TConsoleEntry = {

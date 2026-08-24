@@ -1,5 +1,8 @@
 import {
-  Button,
+   Button,
+  Card,
+  CardBody,
+  Chip,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -23,13 +26,20 @@ import {
   IconAlertCircle,
   IconDeviceFloppy,
   IconDotsVertical,
-  IconHammer,
+    IconHammer,
+  IconLockOpen,
   IconRefresh,
   IconSend,
   IconTerminal2,
   IconUserCancel
 } from '@tabler/icons-react';
-import { Modal, ServerStatus, TGenericObject } from '../../types';
+import {
+  Modal,
+  ServerStatus,
+  TGenericObject,
+  TPalworldInfo,
+  TPalworldPlayer
+} from '../../types';
 import { openModal, requestConfirmation } from '../../actions/modal';
 import { TRconInfo, TRconPlayer } from '../../types/rcon';
 import useServerConfig from '../../hooks/use-server-config';
@@ -133,7 +143,68 @@ const Admin = () => {
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [rows, setRows] = useState<TGenericObject[]>([]);
-  const [message, setMessage] = useState('');
+    const [message, setMessage] = useState('');
+  const [palPlayers, setPalPlayers] = useState<TPalworldPlayer[]>([]);
+  const [palInfo, setPalInfo] = useState<TPalworldInfo>();
+  const [palLoading, setPalLoading] = useState(false);
+  const [palMessage, setPalMessage] = useState('');
+  const [palSaving, setPalSaving] = useState(false);
+
+  const loadPalworld = async () => {
+    setPalLoading(true);
+    setPalInfo(await ServerAPI.palworld.getInfo());
+    setPalPlayers(await ServerAPI.palworld.getPlayers());
+    setPalLoading(false);
+  };
+
+  useEffect(() => {
+    loadPalworld();
+  }, []);
+
+  const onPalAnnounce = async () => {
+    await ServerAPI.palworld.announce(palMessage);
+    setPalMessage('');
+    notifySuccess('Message sent');
+  };
+
+  const onPalSave = async () => {
+    setPalSaving(true);
+    await ServerAPI.palworld.save();
+    setPalSaving(false);
+    notifySuccess('World saved');
+  };
+
+  const onPalKick = async (p: TPalworldPlayer) => {
+    await requestConfirmation({
+      title: 'Confirmation',
+      message: `Kick ${p.name}?`,
+      confirmLabel: 'Kick',
+      variant: 'danger',
+      onConfirm: async () => {
+        await ServerAPI.palworld.kick(p.playerid);
+        loadPalworld();
+      }
+    });
+  };
+
+  const onPalBan = async (p: TPalworldPlayer) => {
+    await requestConfirmation({
+      title: 'Confirmation',
+      message: `Ban ${p.name}? (permanente)`,
+      confirmLabel: 'Ban',
+      variant: 'danger',
+      onConfirm: async () => {
+        await ServerAPI.palworld.ban(p.playerid);
+        loadPalworld();
+      }
+    });
+  };
+
+  const onPalUnban = async (p: TPalworldPlayer) => {
+    await ServerAPI.palworld.unban(p.playerid);
+    notifySuccess('Unbanned');
+    loadPalworld();
+  };
   const processedRows = useMemo(() => {
     return rows.map((row) => ({
       ...row,
@@ -249,7 +320,125 @@ const Admin = () => {
           )}
         </div>
       }
-    >
+        >
+      <Card className="p-3">
+        <CardBody className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold">
+              Palworld (REST API)
+            </span>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              onClick={loadPalworld}
+              isLoading={palLoading}
+            >
+              <IconRefresh size="0.9rem" />
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-sm items-center">
+            {palInfo && (
+              <>
+                <Chip size="sm" variant="flat">
+                  {palInfo.servername}
+                </Chip>
+                <Chip size="sm" variant="flat">
+                  v{palInfo.version}
+                </Chip>
+              </>
+            )}
+            <Chip size="sm" color="success" variant="flat">
+              {palPlayers.length} online
+            </Chip>
+          </div>
+
+          {palPlayers.length > 0 ? (
+            <div className="flex flex-col gap-1">
+              {palPlayers.map((p) => (
+                <div
+                  key={p.playerid}
+                  className="flex items-center justify-between rounded-lg bg-content2 px-3 py-1.5"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm">{p.name}</span>
+                    <span className="text-xs text-neutral-500">
+                      Lv {p.level} · ping {p.ping} · {p.steamid}
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    <Tooltip content="Kick">
+                      <Button
+                        size="sm"
+                        isIconOnly
+                        color="warning"
+                        variant="light"
+                        onClick={() => onPalKick(p)}
+                      >
+                        <IconUserCancel size="1rem" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Ban">
+                      <Button
+                        size="sm"
+                        isIconOnly
+                        color="danger"
+                        variant="light"
+                        onClick={() => onPalBan(p)}
+                      >
+                        <IconHammer size="1rem" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Unban">
+                      <Button
+                        size="sm"
+                        isIconOnly
+                        variant="light"
+                        onClick={() => onPalUnban(p)}
+                      >
+                        <IconLockOpen size="1rem" />
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <span className="text-sm text-neutral-500">
+              Nenhum jogador online
+            </span>
+          )}
+
+          <div className="flex gap-2 items-center">
+            <Input
+              className="flex-1"
+              size="sm"
+              placeholder="Mensagem para todos os jogadores (announce)..."
+              value={palMessage}
+              onChange={(e) => setPalMessage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && onPalAnnounce()}
+            />
+            <Button
+              size="sm"
+              color="primary"
+              onClick={onPalAnnounce}
+              isDisabled={!palMessage}
+            >
+              <IconSend size="0.9rem" /> Announce
+            </Button>
+            <Button
+              size="sm"
+              color="secondary"
+              onClick={onPalSave}
+              isLoading={palSaving}
+            >
+              <IconDeviceFloppy size="0.9rem" /> Save
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+
       <div className="flex gap-2 items-center justify-between">
         <div className="flex gap-2">
           <Tooltip content="Gets fresh data from the server">

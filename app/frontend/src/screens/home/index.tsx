@@ -1,4 +1,4 @@
-import { Button, Input, Tooltip } from '@nextui-org/react';
+import { Button, Card, CardBody, Chip, Input, Spinner, Tooltip } from '@nextui-org/react';
 import Layout from '../../components/layout';
 import useServerConfig from '../../hooks/use-server-config';
 import {
@@ -18,7 +18,8 @@ import { DesktopAPI } from '../../desktop';
 import useLaunchParams from '../../hooks/use-launch-params';
 import { setLaunchParams } from '../../actions/app';
 import { ServerAPI } from '../../server';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { TPalworldInfo, TPalworldMetrics } from '../../types';
 
 const statusDict = {
   [ServerStatus.STARTED]: 'Server is running',
@@ -35,6 +36,20 @@ const Home = () => {
   const consoleEntries = useConsolesById();
   const launchParams = useLaunchParams();
   const [saving, setSaving] = useState(false);
+  const [palInfo, setPalInfo] = useState<TPalworldInfo>();
+  const [palMetrics, setPalMetrics] = useState<TPalworldMetrics>();
+  const [palLoading, setPalLoading] = useState(false);
+
+  const loadPalworld = async () => {
+    setPalLoading(true);
+    setPalInfo(await ServerAPI.palworld.getInfo());
+    setPalMetrics(await ServerAPI.palworld.getMetrics());
+    setPalLoading(false);
+  };
+
+  useEffect(() => {
+    loadPalworld();
+  }, []);
 
   const startDisabled = status !== ServerStatus.STOPPED;
   const stopDisabled = status !== ServerStatus.STARTED;
@@ -153,6 +168,62 @@ const Home = () => {
           </Button>
         </Tooltip>
       </div>
+
+      <Card className="p-3">
+        <CardBody className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold">
+              Palworld Server (REST API)
+            </span>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              onClick={loadPalworld}
+              isLoading={palLoading}
+            >
+              <IconRefresh size="0.9rem" />
+            </Button>
+          </div>
+          {palInfo || palMetrics ? (
+            <div className="flex flex-wrap gap-2 text-sm">
+              {palInfo && (
+                <>
+                  <Chip size="sm" variant="flat">
+                    {palInfo.servername || '?'}
+                  </Chip>
+                  <Chip size="sm" variant="flat">
+                    v{palInfo.version}
+                  </Chip>
+                </>
+              )}
+              {palMetrics && (
+                <>
+                  <Chip size="sm" color="success" variant="flat">
+                    {palMetrics.currentplayernum}/{palMetrics.maxplayernum}{' '}
+                    players
+                  </Chip>
+                  <Chip size="sm" variant="flat">
+                    {palMetrics.serverfps} FPS
+                  </Chip>
+                  <Chip size="sm" variant="flat">
+                    Day {palMetrics.days}
+                  </Chip>
+                  <Chip size="sm" variant="flat">
+                    Uptime {Math.floor(palMetrics.uptime / 60)} min
+                  </Chip>
+                </>
+              )}
+            </div>
+          ) : palLoading ? (
+            <Spinner size="sm" />
+          ) : (
+            <span className="text-sm text-neutral-500">
+              Servidor offline (REST API não responde)
+            </span>
+          )}
+        </CardBody>
+      </Card>
 
       <TerminalOutput entries={consoleEntries} className="h-full" />
     </Layout>
