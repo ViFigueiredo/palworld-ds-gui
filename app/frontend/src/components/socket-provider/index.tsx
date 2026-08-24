@@ -43,7 +43,8 @@ const SocketProvider = ({ children }: TSocketProviderProps) => {
     setSocketError(false);
     DesktopAPI.logToFile(`Connecting to ${address}`);
 
-    const socketUrl = `ws://${address}/ws?auth=${apiKey}`;
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socketUrl = `${protocol}://${address}/ws?auth=${apiKey}`;
     const socket = new WebSocket(socketUrl);
 
     const onOpen = () => {

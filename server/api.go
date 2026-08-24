@@ -9,6 +9,7 @@ import (
 	"os"
 	"palworld-ds-gui-server/utils"
 	"path"
+	"path/filepath"
 )
 
 type Api struct {
@@ -81,7 +82,30 @@ func (a *Api) Init() {
 		// Serve the requested file.
 		http.ServeFile(w, r, safeFilePath)
 	})
+
+	// Web UI (SPA): serve o frontend buildado (ver Dockerfile) na raiz.
+	// O caminho pode ser sobrescrito por PALWORLD_GUI_WEB_DIR.
+	webDir := os.Getenv("PALWORLD_GUI_WEB_DIR")
+	if webDir == "" {
+		webDir = "/usr/local/share/palworld-ds-gui-web"
+	}
+	http.Handle("/", spaFileServer(webDir))
+
 	http.ListenAndServe(fmt.Sprintf(":%d", utils.Launch.Port), nil)
+}
+
+// spaFileServer serve os arquivos estáticos da SPA com fallback para index.html
+// (routing do lado do cliente — React Router).
+func spaFileServer(dir string) http.Handler {
+	fileServer := http.FileServer(http.Dir(dir))
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p := filepath.Join(dir, filepath.Clean(r.URL.Path))
+		if _, err := os.Stat(p); os.IsNotExist(err) {
+			http.ServeFile(w, r, filepath.Join(dir, "index.html"))
+			return
+		}
+		fileServer.ServeHTTP(w, r)
+	})
 }
 
 func GenerateApiKey() {
