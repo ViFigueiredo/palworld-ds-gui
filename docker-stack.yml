@@ -9,8 +9,10 @@ services:
       # Senha via variável do Portainer (repo é público — nunca commitar a senha)
       PALWORLD_API_PASSWORD: "${PALWORLD_API_PASSWORD}"
       TZ: "America/Sao_Paulo"
-    ports:
-      - "21577:21577/tcp"
+    # Sem porta publicada: o acesso é via Cloudflare Tunnel (rede tunnel), como as demais stacks.
+    # No painel Cloudflare, apontar o hostname para http://palworld-ds-gui:21577
+    networks:
+      - tunnel
     volumes:
       - /opt/palworld-ds-gui:/data
     deploy:
@@ -22,3 +24,7 @@ services:
         reservations:
           cpus: "0.25"
           memory: 128M
+
+networks:
+  tunnel:
+    external: true
