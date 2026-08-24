@@ -1,6 +1,7 @@
 # ---------- Frontend (web UI — Vite/React) ----------
 FROM node:20-alpine AS web
-RUN corepack enable
+# pnpm 8 (lockfileVersion 6.0 do projeto) — o pnpm 11 exigiria Node >= 22
+RUN corepack enable && corepack prepare pnpm@8 --activate
 WORKDIR /src/app
 COPY app/wails.json app/wails.json
 COPY app/frontend/package.json app/frontend/pnpm-lock.yaml app/frontend/
